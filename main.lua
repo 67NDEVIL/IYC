@@ -386,7 +386,7 @@ local SilentAimTab = Window:CreateTab("Silent Aimbot 😎", nil) -- Title, Image
 local Section = SilentAimTab:CreateSection("SilentAim")
 
 local Button = SilentAimTab:CreateButton({
-    Name = "Enable SilentAim",
+    Name = "Enable HitboxAimbot",
     Callback = function()
         getgenv().HBE = true -- HBE Variable, use this to control whether the hitboxes are active or not.
         local Players = game:GetService("Players")
