@@ -50,10 +50,10 @@ ToggleButton.Font = Enum.Font.SourceSansBold
 ToggleButton.TextSize = 14
 ToggleButton.Parent = ScreenGui
 
--- FOV Changer (Top-Center, Draggable)
+-- FOV Changer (Higher up on screen, below the top edge)
 local FOVFrame = Instance.new("Frame")
 FOVFrame.Size = UDim2.new(0, 200, 0, 30)
-FOVFrame.Position = UDim2.new(0.5, -100, 0, 60)
+FOVFrame.Position = UDim2.new(0.5, -100, 0, 20) -- Changed Y position from 60 to 20
 FOVFrame.BackgroundTransparency = 0.7
 FOVFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 FOVFrame.Active = true
