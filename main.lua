@@ -1,6 +1,6 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local textToCopy = "https://direct-link.net/1339131/iyc-hub-aimbot1"
+local textToCopy = "https://link-center.net/1339131/iyc-hub"
 
 -- Function to copy with feedback
 local function copyWithFeedback(text)
