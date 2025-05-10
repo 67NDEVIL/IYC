@@ -464,3 +464,157 @@ local Button = SilentAimTab:CreateButton({
 
 })
  
+local VisualsTab = Window:CreateTab("Visuals 👁️", nil) -- Title, Image
+local Section = VisualsTab:CreateSection("ESP")
+
+local Button = VisualsTab:CreateButton({
+   Name = "Enable ESP",
+   Callback = function()
+   local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local TeamService = game:GetService("Teams")
+
+-- Configuration
+local HEALTH_BAR_OFFSET = Vector3.new(3, 0, 0) -- Right side of player
+local BOX_TRANSPARENCY = 0.85
+
+local function createPlayerVisuals(player)
+    if player == LocalPlayer then return end
+    
+    -- Team color function
+    local function getTeamColor()
+        if not LocalPlayer.Team or not player.Team then
+            return Color3.new(1, 0, 0) -- Default red
+        end
+        return LocalPlayer.Team == player.Team and Color3.new(0, 1, 0) or Color3.new(1, 0, 0)
+    end
+    
+    -- Create box highlight
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "TeamHighlight"
+    highlight.FillTransparency = BOX_TRANSPARENCY
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    
+    -- Create health bar container
+    local healthGui = Instance.new("BillboardGui")
+    healthGui.Name = "SideHealthBar"
+    healthGui.AlwaysOnTop = true
+    healthGui.Size = UDim2.new(5, 0, 1, 0)
+    healthGui.StudsOffset = HEALTH_BAR_OFFSET
+    
+    local healthFrame = Instance.new("Frame")
+    healthFrame.Size = UDim2.new(0.2, 0, 3, 0)
+    healthFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    healthFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    healthFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+    healthFrame.BorderSizePixel = 2
+    healthFrame.BorderColor3 = Color3.new(0, 0, 0)
+    healthFrame.Parent = healthGui
+    
+    local healthBar = Instance.new("Frame")
+    healthBar.Size = UDim2.new(1, 0, 1, 0)
+    healthBar.BackgroundColor3 = Color3.new(0, 1, 0)
+    healthBar.BorderSizePixel = 0
+    healthBar.AnchorPoint = Vector2.new(0, 1)
+    healthBar.Position = UDim2.new(0, 0, 1, 0)
+    healthBar.Parent = healthFrame
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(2, 0, 0.3, 0)
+    nameLabel.Position = UDim2.new(-0.5, 0, -0.15, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = player.Name
+    nameLabel.TextColor3 = Color3.new(1, 1, 1)
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    nameLabel.Font = Enum.Font.SourceSansBold
+    nameLabel.TextSize = 12
+    nameLabel.Parent = healthGui
+    
+    -- Update visuals function
+    local function updateVisuals()
+        if not player.Character then return end
+        
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+        
+        -- Alive check (added this section)
+        local isAlive = humanoid.Health > 0 and humanoid:GetState() ~= Enum.HumanoidStateType.Dead
+        if not isAlive then
+            highlight.Enabled = false
+            healthGui.Enabled = false
+            return
+        end
+        
+        -- Update team colors
+        local teamColor = getTeamColor()
+        highlight.FillColor = teamColor
+        highlight.OutlineColor = teamColor
+        
+        -- Update health bar
+        local healthPercent = humanoid.Health / humanoid.MaxHealth
+        healthBar.Size = UDim2.new(1, 0, healthPercent, 0)
+        healthBar.BackgroundColor3 = Color3.new(1 - healthPercent, healthPercent, 0)
+        
+        -- Position GUI at torso
+        local torso = player.Character:FindFirstChild("UpperTorso") or player.Character:FindFirstChild("Torso")
+        if torso then
+            healthGui.Adornee = torso
+            healthGui.Parent = torso
+            highlight.Parent = player.Character
+        end
+    end
+    
+    -- Initial setup if character exists
+    if player.Character then
+        updateVisuals()
+    end
+    
+    -- Character added event
+    player.CharacterAdded:Connect(function(character)
+        local humanoid = character:WaitForChild("Humanoid")
+        
+        -- Connect property changes
+        humanoid:GetPropertyChangedSignal("Health"):Connect(updateVisuals)
+        humanoid.StateChanged:Connect(updateVisuals) -- Added for death state changes
+        player:GetPropertyChangedSignal("Team"):Connect(updateVisuals)
+        LocalPlayer:GetPropertyChangedSignal("Team"):Connect(updateVisuals)
+        
+        updateVisuals()
+    end)
+    
+    -- Cleanup when player leaves
+    player.AncestryChanged:Connect(function(_, parent)
+        if parent == nil then
+            if healthGui then healthGui:Destroy() end
+            if highlight then highlight:Destroy() end
+        end
+    end)
+end
+
+-- Initialize for all players
+for _, player in ipairs(Players:GetPlayers()) do
+    createPlayerVisuals(player)
+end
+
+-- Handle new players
+Players.PlayerAdded:Connect(createPlayerVisuals)
+
+-- Team change handler
+TeamService.TeamChanged:Connect(function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            local highlight = player.Character:FindFirstChild("TeamHighlight")
+            if highlight then
+                local teamColor = getTeamColor(player)
+                highlight.FillColor = teamColor
+                highlight.OutlineColor = teamColor
+            end
+        end
+    end
+end)
+   end,
+})
